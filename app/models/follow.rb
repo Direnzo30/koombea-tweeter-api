@@ -23,8 +23,8 @@ class Follow < ApplicationRecord
   validates :user_id, presence: true
   validates :followed_id, presence: true
   
-  belongs_to :user, :class_name => "User", counter_cache: true
-  belongs_to :followed, :class_name => "User", counter_cache: true
+  belongs_to :user, :class_name => "User"
+  belongs_to :followed, :class_name => "User"
 
   include EndpointsHandler
 
