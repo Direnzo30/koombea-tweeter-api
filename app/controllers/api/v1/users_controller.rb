@@ -11,6 +11,11 @@ class Api::V1::UsersController < ApplicationController
       centralize_response(response, status_code, FollowListUserSerializer)
     end
 
+    def network_stats
+      response, status_code = User.get_network_stats(curr_user, following_params)
+      centralize_response(response, status_code)
+    end
+
     private
 
     def following_params
