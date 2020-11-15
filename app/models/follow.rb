@@ -19,4 +19,21 @@
 #  fk_rails_...  (user_id => users.id)
 #
 class Follow < ApplicationRecord
+
+  validates :user_id, presence: true
+  validates :followed_id, presence: true
+
+  include EndpointsHandler
+
+  def self.generate_follow(user, params)
+    flat_endpoint do
+      follow_params = {user_id: user.id}.merge(params)
+      follow = self.new(follow_params)
+      raise ActiveRecord::RecordInvalid.new(follow) unless follow.valid?
+      raise PersonalizedException.new("User cannot follows itself", :bad_request) if user.id == params[:followed_id]
+      raise PersonalizedException.new("User has been already followed", :bad_request) if self.exists?(follow_params).present?
+      follow.save!
+      { content: { follow_id: follow.id } }
+    end
+  end
 end

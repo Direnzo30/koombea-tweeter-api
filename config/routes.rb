@@ -17,6 +17,10 @@ Rails.application.routes.draw do
       resources :tweets, only:[:create] do
         
       end
+      # Follow Model Operations
+      resources :follows, only:[:create] do
+
+      end
     end
   end
 end
