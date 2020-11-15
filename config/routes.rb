@@ -11,7 +11,10 @@ Rails.application.routes.draw do
       end
       # User Model Operations
       resources :users, only:[] do
-        
+        member do
+          get 'followers', to: "users#followers"
+          get 'followed', to: "users#followed"
+        end
       end
       # Tweet Model Operations
       resources :tweets, only:[:create] do

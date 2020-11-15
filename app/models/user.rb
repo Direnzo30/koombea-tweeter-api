@@ -67,6 +67,17 @@ class User < ApplicationRecord
     end
   end
 
+  def self.get_followed(user, params)
+    flat_endpoint do
+      raise RequiredParamExecption.new("id") unless params[:id].present? 
+      followed_users = User.joins("INNER JOIN follows F ON users.id = F.followed_id")
+                          .where("F.user_id = ?", params[:id])
+      metadata = get_pagination_metadata(params, followed_users)
+      followed_users = followed_users.paginate(metadata)
+      { content: followed_users, metadata: metadata }
+    end
+  end
+
   def assign_auth_token!
     # Make sure token is unique
     while true

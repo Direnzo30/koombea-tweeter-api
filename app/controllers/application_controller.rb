@@ -40,7 +40,7 @@ class ApplicationController < ActionController::API
     # Apply custom serializer to content
     if serializer.present?
       # Check if its a collection
-      if response[:content].is_a? Array
+      if response[:content].respond_to? :each
         render_multiple_content(response, serializer, serializer_params)
       else
         render_single_content(response, serializer, serializer_params)
