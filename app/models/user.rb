@@ -33,6 +33,8 @@ class User < ApplicationRecord
   validates :password_digest, presence: true
   validates :authorization_token, allow_blank: true, uniqueness: { case_sensitive: false }
 
+  has_many :tweets
+
   include EndpointsHandler
 
   def self.signup(params)

@@ -23,7 +23,7 @@ before_action :authenticate_user!, only: [:signout]
   end
 
   def signin_params
-    params.permit(:email, :password)
+    params.permit(:username, :password)
   end
   
 end
