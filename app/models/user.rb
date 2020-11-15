@@ -67,13 +67,30 @@ class User < ApplicationRecord
     end
   end
 
-  def self.get_followed(user, params)
+  # Get the contact that are following the selected user
+  def self.get_following_the_user(user, params)
     flat_endpoint do
       raise RequiredParamExecption.new("id") unless params[:id].present? 
-      followed_users = User.joins("INNER JOIN follows F ON users.id = F.followed_id")
-                          .where("F.user_id = ?", params[:id])
+      followed_users = User.joins("INNER JOIN FOLLOWS F ON users.id = F.user_id")
+                           .where("F.followed_id = ?", params[:id])
       metadata = get_pagination_metadata(params, followed_users)
-      followed_users = followed_users.paginate(metadata)
+      # Needs to check if selected users are followed by current user
+      followed_users = followed_users.select("users.*, (F.user_id IN (SELECT U.followed_id from FOLLOWS U where U.user_id = #{user.id})) AS followed")
+                                     .paginate(metadata)
+      { content: followed_users, metadata: metadata }
+    end
+  end
+
+  # Get the contacts that the selected user follows
+  def self.get_followed_by_the_user(user, params)
+    flat_endpoint do
+      raise RequiredParamExecption.new("id") unless params[:id].present? 
+      followed_users = User.joins("INNER JOIN FOLLOWS F ON users.id = F.followed_id")
+                           .where("F.user_id = ?", params[:id])
+      metadata = get_pagination_metadata(params, followed_users)
+      # Needs to check if selected users are followed by current user
+      followed_users = followed_users.select("users.*, (F.followed_id IN (SELECT U.followed_id from FOLLOWS U where U.user_id = #{user.id})) AS followed")
+                                     .paginate(metadata)
       { content: followed_users, metadata: metadata }
     end
   end
