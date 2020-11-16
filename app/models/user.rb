@@ -78,6 +78,7 @@ class User < ApplicationRecord
       metadata = get_pagination_metadata(params, followed_users)
       # Needs to check if selected users are followed by current user
       followed_users = followed_users.select("users.*, (F.user_id IN (SELECT U.followed_id from follows U where U.user_id = #{user.id})) AS followed")
+                                     .order("first_name ASC, last_name ASC")
                                      .paginate(metadata)
       { content: followed_users, metadata: metadata }
     end
@@ -92,6 +93,7 @@ class User < ApplicationRecord
       metadata = get_pagination_metadata(params, followed_users)
       # Needs to check if selected users are followed by current user
       followed_users = followed_users.select("users.*, (F.followed_id IN (SELECT U.followed_id from follows U where U.user_id = #{user.id})) AS followed")
+                                     .order("first_name ASC, last_name ASC")
                                      .paginate(metadata)
       { content: followed_users, metadata: metadata }
     end
