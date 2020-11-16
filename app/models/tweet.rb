@@ -25,6 +25,20 @@ class Tweet < ApplicationRecord
 
   include EndpointsHandler
 
+  def self.list_tweets_by_user(user, params)
+    flat_endpoint do
+      requested_user = User.find(params[:user_id])
+      tweets = Tweet.joins("INNER JOIN users U ON tweets.user_id = u.id")
+                    .where("U.id = ?", requested_user.id)
+      metadata = get_pagination_metadata(params, tweets)
+      tweets = tweets.select("tweets.*, U.username, U.first_name, U.last_name")
+                     .order("tweets.created_at DESC")
+                     .paginate(metadata)
+      { content: tweets, metadata: metadata.merge(username: requested_user.username) }
+    end
+  end
+
+
   def self.generate_tweet(user, params)
     flat_endpoint do
       tweet_params = { user_id: user.id }.merge(params)

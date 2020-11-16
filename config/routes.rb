@@ -19,7 +19,9 @@ Rails.application.routes.draw do
       end
       # Tweet Model Operations
       resources :tweets, only:[:index, :create] do
-        
+        collection do
+          get 'by_user', to: "tweets#by_user"
+        end
       end
       # Follow Model Operations
       resources :follows, only:[:create] do
