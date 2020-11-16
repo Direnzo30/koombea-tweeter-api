@@ -100,14 +100,15 @@ class User < ApplicationRecord
   end
 
   # Get counters
-  def self.get_network_stats(user, params)
+  def self.basic_profile(user, params)
     flat_endpoint do
-      raise RequiredParamExecption.new("id") unless params[:id].present?
       cleaned_id = params[:id].to_i
-      select_query = "(SELECT COUNT(id) FROM follows F WHERE F.user_id = #{cleaned_id}), "\
-                     "(SELECT COUNT(id) FROM follows F WHERE F.followed_id = #{cleaned_id})"
-      t_followed, t_followers = Follow.limit(1).pluck(Arel.sql(select_query)).first
-      { content: { followers: t_followers, followed: t_followed } }
+      requested_user = User.select("users.*, "\
+                                   "(SELECT COUNT(id) FROM follows F WHERE F.user_id = #{cleaned_id}) AS total_followed, "\
+                                   "(SELECT COUNT(id) FROM follows F WHERE F.followed_id = #{cleaned_id}) AS total_followers, "\
+                                   "(users.id = #{user.id} OR (users.id IN (SELECT U.followed_id from follows U where U.user_id = #{user.id}))) AS followed")
+                            .find(cleaned_id)
+      { content: requested_user }
     end
   end
 

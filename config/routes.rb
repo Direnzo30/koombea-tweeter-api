@@ -14,7 +14,6 @@ Rails.application.routes.draw do
         member do
           get 'followers', to: "users#followers"
           get 'followed', to: "users#followed"
-          get 'network_stats', to: "users#network_stats"
         end
       end
       # Tweet Model Operations

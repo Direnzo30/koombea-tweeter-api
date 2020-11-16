@@ -11,9 +11,9 @@ class Api::V1::UsersController < ApplicationController
       centralize_response(response, status_code, FollowListUserSerializer)
     end
 
-    def network_stats
-      response, status_code = User.get_network_stats(curr_user, following_params)
-      centralize_response(response, status_code)
+    def show
+      response, status_code = User.basic_profile(curr_user, params.permit(:id))
+      centralize_response(response, status_code, UserBasicProfileSerializer)
     end
 
     private

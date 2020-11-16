@@ -25,6 +25,7 @@ class Tweet < ApplicationRecord
 
   include EndpointsHandler
 
+  # Retrieves list for specific user - do not confuse with feed
   def self.list_tweets_by_user(user, params)
     flat_endpoint do
       requested_user = User.find(params[:user_id])
