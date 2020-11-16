@@ -10,7 +10,7 @@ Rails.application.routes.draw do
         delete 'signout', to: "sessions#signout"
       end
       # User Model Operations
-      resources :users, only:[] do
+      resources :users, only:[:show] do
         member do
           get 'followers', to: "users#followers"
           get 'followed', to: "users#followed"
@@ -18,7 +18,7 @@ Rails.application.routes.draw do
         end
       end
       # Tweet Model Operations
-      resources :tweets, only:[:create] do
+      resources :tweets, only:[:index, :create] do
         
       end
       # Follow Model Operations
