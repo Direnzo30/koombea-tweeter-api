@@ -2,7 +2,7 @@ class ApplicationRecord < ActiveRecord::Base
   self.abstract_class = true
 
   scope :paginate, -> (params) {
-    offset(params[:offset]).limit(params[:limit])
+    offset(params[:offset]).limit(params[:per_page])
   }
 
   def self.get_pagination_metadata(params, query)

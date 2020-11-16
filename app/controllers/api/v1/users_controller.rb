@@ -19,7 +19,7 @@ class Api::V1::UsersController < ApplicationController
     private
 
     def following_params
-      params.permit(:id)
+      params.permit(:id, :per_page, :page)
     end
   end
   
