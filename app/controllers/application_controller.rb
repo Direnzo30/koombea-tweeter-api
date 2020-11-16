@@ -33,6 +33,11 @@ class ApplicationController < ActionController::API
     end
   end
 
+  # Centralizes common search params
+  def page_params
+    [ :per_page, :page ]
+  end
+
   private
 
   # Handles response un case of success

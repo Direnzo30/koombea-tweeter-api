@@ -1,6 +1,11 @@
 class Api::V1::TweetsController < ApplicationController
   before_action :authenticate_user!
 
+  def index
+    response, status_code = Tweet.index_by_logged_user(curr_user, params.permit(*page_params))
+    centralize_response(response, status_code, TweetsListSerializer)
+  end
+
   def by_user
     response, status_code = Tweet.list_tweets_by_user(curr_user, search_params)
     centralize_response(response, status_code, TweetsListSerializer)
@@ -18,7 +23,7 @@ class Api::V1::TweetsController < ApplicationController
   end
 
   def search_params
-    params.permit(:user_id, :per_page, :page)
+    params.permit(:user_id, *page_params)
   end
 
 end

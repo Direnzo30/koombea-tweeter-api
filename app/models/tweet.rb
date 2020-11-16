@@ -25,6 +25,20 @@ class Tweet < ApplicationRecord
 
   include EndpointsHandler
 
+  # Retrieves all the feeds associated to current user and his dependencies
+  def self.index_by_logged_user(user, params)
+    flat_endpoint do
+      tweets = Tweet.joins("INNER JOIN users U ON tweets.user_id = u.id")
+                    .where("U.id = :id OR U.id IN (SELECT followed_id FROM follows F WHERE F.user_id = :id)", { id: user.id })
+      metadata = get_pagination_metadata(params, tweets)
+      tweets = tweets.select("tweets.*, U.username, U.first_name, U.last_name")
+                     .order("tweets.created_at DESC")
+                     .paginate(metadata)
+      { content: tweets, metadata: metadata }
+      
+    end
+  end
+
   # Retrieves list for specific user - do not confuse with feed
   def self.list_tweets_by_user(user, params)
     flat_endpoint do
