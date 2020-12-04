@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe User, type: :model do
-  let(:subject) { create(:user) }
+  subject { create(:user) }
 
   let(:signup_params) { 
     {
