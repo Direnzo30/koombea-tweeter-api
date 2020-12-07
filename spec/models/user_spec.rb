@@ -133,4 +133,49 @@ RSpec.describe User, type: :model do
     end
   end
 
+  describe "User's Relations" do
+
+    before(:example) do
+      @follwed_by_user = []
+      @following_the_user = []
+      top_limit = rand(5..10)
+      (0..top_limit).each do |i|
+        u = create(:user)
+        if i.even?
+          Follow.create({ user_id: subject.id, followed_id: u.id })
+          @follwed_by_user << u.id
+        else
+          Follow.create({ user_id: u.id, followed_id: subject.id })
+          @following_the_user << u.id
+        end
+      end
+    end
+
+    describe "::basic_profile" do
+      context "when the requested profile doesn't exist" do
+        it "doesn't retrieve a profile" do
+          response, code = User.basic_profile(subject, { id: 0 })
+          expect(code).to eq(:unprocessable_entity)
+          expect(response[:error]).not_to be_nil
+          expect(response[:content]).to be_nil
+        end
+      end
+
+      context "when the requested profile exists" do
+        it "retrieves the profile" do
+          response, code = User.basic_profile(subject, { id: subject.id })
+          expect(code).to eq(:ok)
+          expect(response[:error]).to be_nil
+          expect(response[:content]).not_to be_nil
+          expect(response[:content].username).to eq(subject.username)
+          expect(response[:content].attributes["total_followed"]).to eq(@follwed_by_user.size)
+          expect(response[:content].attributes["total_followers"]).to eq(@following_the_user.size)
+        end
+      end
+    end
+
+    
+
+  end
+
 end
