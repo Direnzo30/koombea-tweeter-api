@@ -120,4 +120,17 @@ RSpec.describe User, type: :model do
     end
   end
 
+  describe "::signout" do
+    it "signs out" do
+      subject.authorization_token = Faker::Internet.uuid
+      subject.token_lifetime = Time.now
+      response, code = User.signout(subject)
+      expect(code).to eq(:ok)
+      expect(response[:error]).to be_nil
+      expect(response[:content][:success]).to eq(true)
+      expect(subject.authorization_token).to eq(nil)
+      expect(subject.token_lifetime).to eq(nil)
+    end
+  end
+
 end
