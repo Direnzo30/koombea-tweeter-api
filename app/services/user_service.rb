@@ -10,7 +10,7 @@ class UserService < BaseService
       requested_user = User.select(:username).find(params[:id])
       followed_users = User.joins("INNER JOIN follows F ON users.id = F.user_id")
                            .where("F.followed_id = ?", params[:id])
-      metadata = Pagination::metadata(params, followed_users)
+      metadata = page_metadata(params, followed_users)
       # Needs to check if selected users are followed by current user
       followed_users = followed_users.select("users.*, (F.user_id IN (SELECT U.followed_id from follows U where U.user_id = #{@current_user.id})) AS followed")
                                      .order("first_name ASC, last_name ASC")
@@ -25,7 +25,7 @@ class UserService < BaseService
       requested_user =  User.select(:username).find(params[:id])
       followed_users = User.joins("INNER JOIN follows F ON users.id = F.followed_id")
                            .where("F.user_id = ?", params[:id])
-      metadata = Pagination::metadata(params, followed_users)
+      metadata = page_metadata(params, followed_users)
       # Needs to check if selected users are followed by current user
       followed_users = followed_users.select("users.*, (F.followed_id IN (SELECT U.followed_id from follows U where U.user_id = #{@current_user.id})) AS followed")
                                      .order("first_name ASC, last_name ASC")

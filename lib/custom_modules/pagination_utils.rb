@@ -1,5 +1,6 @@
-module Pagination
-  def metadata(params, query)
+module PaginationUtils
+
+  def page_metadata(params, query)
     page  = params[:page]&.to_i || 1
     limit = params[:per_page]&.to_i || 10
     offset = (page - 1)*limit
@@ -7,4 +8,5 @@ module Pagination
     total_pages = (total_entries.to_f/limit).ceil
     { page: page, total_pages: total_pages, total_records: total_entries, offset: offset, per_page: limit }
   end
+
 end

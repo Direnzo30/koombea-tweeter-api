@@ -9,7 +9,7 @@ class TweetService < BaseService
     flat_endpoint do
       tweets = Tweet.joins("INNER JOIN users U ON tweets.user_id = u.id")
                     .where("U.id = :id OR U.id IN (SELECT followed_id FROM follows F WHERE F.user_id = :id)", { id: @current_user.id })
-      metadata = Pagination::metadata(params, tweets)
+      metadata = page_metadata(params, tweets)
       tweets = tweets.select("tweets.*, U.username, U.first_name, U.last_name")
                      .order("tweets.created_at DESC")
                      .paginate(metadata)
@@ -23,7 +23,7 @@ class TweetService < BaseService
       requested_user = User.find(params[:user_id])
       tweets = Tweet.joins("INNER JOIN users U ON tweets.user_id = u.id")
                     .where("U.id = ?", requested_user.id)
-      metadata = Pagination::metadata(params, tweets)
+      metadata = page_metadata(params, tweets)
       tweets = tweets.select("tweets.*, U.username, U.first_name, U.last_name")
                      .order("tweets.created_at DESC")
                      .paginate(metadata)
