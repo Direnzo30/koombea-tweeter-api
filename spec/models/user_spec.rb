@@ -84,4 +84,40 @@ RSpec.describe User, type: :model do
 
   end
 
+  describe "::signin" do
+    let(:random_password) { Faker::Internet.password }
+    let(:random_username) { Faker::Internet.username }
+
+    context "when signin parameters are missing" do
+      it "doesn't sign in" do
+        response, code = User.signin({ username: nil, password: random_password })
+        expect(code). to eq(:bad_request)
+        expect(response[:error]).to eq("Param username is required and cannot be blank")
+        expect(response[:content]).to be_nil
+        response, code = User.signin({ username: random_username, password: nil })
+        expect(code). to eq(:bad_request)
+        expect(response[:error]).to eq("Param password is required and cannot be blank")
+        expect(response[:content]).to be_nil
+      end
+    end
+
+    context "When credentials are not valid" do
+      it "doesn't sign in" do
+        response, code = User.signin({ username: random_username, password: random_password })
+        expect(code). to eq(:bad_request)
+        expect(response[:error]).to eq("Credentials are not valid")
+        expect(response[:content]).to be_nil
+      end
+    end
+
+    context "When credentials are valid" do
+      it "signs in" do
+        response, code = User.signin({ username: subject.username, password: subject.password })
+        expect(code). to eq(:ok)
+        expect(response[:error]).to be_nil
+        expect(response[:content].authorization_token).not_to be_nil
+      end
+    end
+  end
+
 end
