@@ -1,5 +1,5 @@
 require 'rails_helper'
-
+require_relative '../shared_contexts/user_with_relations.rb'
 RSpec.describe User, type: :model do
   subject { create(:user) }
 
@@ -91,11 +91,11 @@ RSpec.describe User, type: :model do
     context "when signin parameters are missing" do
       it "doesn't sign in" do
         response, code = User.signin({ username: nil, password: random_password })
-        expect(code). to eq(:bad_request)
+        expect(code).to eq(:bad_request)
         expect(response[:error]).to eq("Param username is required and cannot be blank")
         expect(response[:content]).to be_nil
         response, code = User.signin({ username: random_username, password: nil })
-        expect(code). to eq(:bad_request)
+        expect(code).to eq(:bad_request)
         expect(response[:error]).to eq("Param password is required and cannot be blank")
         expect(response[:content]).to be_nil
       end
@@ -104,7 +104,7 @@ RSpec.describe User, type: :model do
     context "When credentials are not valid" do
       it "doesn't sign in" do
         response, code = User.signin({ username: random_username, password: random_password })
-        expect(code). to eq(:bad_request)
+        expect(code).to eq(:bad_request)
         expect(response[:error]).to eq("Credentials are not valid")
         expect(response[:content]).to be_nil
       end
@@ -113,7 +113,7 @@ RSpec.describe User, type: :model do
     context "When credentials are valid" do
       it "signs in" do
         response, code = User.signin({ username: subject.username, password: subject.password })
-        expect(code). to eq(:ok)
+        expect(code).to eq(:ok)
         expect(response[:error]).to be_nil
         expect(response[:content].authorization_token).not_to be_nil
       end
@@ -133,82 +133,64 @@ RSpec.describe User, type: :model do
     end
   end
 
-  describe "User's Relations" do
-
-    before(:example) do
-      @follwed_by_user = []
-      @following_the_user = []
-      top_limit = rand(5..10)
-      (0..top_limit).each do |i|
-        u = create(:user)
-        if i.even?
-          Follow.create({ user_id: subject.id, followed_id: u.id })
-          @follwed_by_user << u.id
-        else
-          Follow.create({ user_id: u.id, followed_id: subject.id })
-          @following_the_user << u.id
-        end
+  describe "::basic_profile" do
+    context "when the requested profile doesn't exist" do
+      it "doesn't retrieve a profile" do
+        response, code = User.basic_profile(subject, { id: 0 })
+        expect(code).to eq(:unprocessable_entity)
+        expect(response[:error]).not_to be_nil
+        expect(response[:content]).to be_nil
       end
     end
 
-    describe "::basic_profile" do
-      context "when the requested profile doesn't exist" do
-        it "doesn't retrieve a profile" do
-          response, code = User.basic_profile(subject, { id: 0 })
-          expect(code).to eq(:unprocessable_entity)
-          expect(response[:error]).not_to be_nil
-          expect(response[:content]).to be_nil
-        end
+    context "when the requested profile exists" do
+      include_context "user_with_relations"
+      it "retrieves the profile" do
+        response, code = User.basic_profile(subject, { id: @user_with_relations.id })
+        expect(code).to eq(:ok)
+        expect(response[:error]).to be_nil
+        expect(response[:content]).not_to be_nil
+        expect(response[:content].username).to eq(@user_with_relations.username)
+        expect(response[:content].attributes["total_followed"]).to eq(@follwed_by_user.size)
+        expect(response[:content].attributes["total_followers"]).to eq(@following_the_user.size)
       end
+    end
+  end
 
-      context "when the requested profile exists" do
-        it "retrieves the profile" do
-          response, code = User.basic_profile(subject, { id: subject.id })
+  describe "::get_followed_by_the_user" do
+    context "when the requested user doesn't exist" do
+      it "doesn't retrieve the followed users" do
+        response, code = User.get_followed_by_the_user(subject, { id: 0, page: 1, per_page: 10 })
+        expect(code).to eq(:unprocessable_entity)
+        expect(response[:error]).not_to be_nil
+        expect(response[:content]).to be_nil
+      end
+    end
+
+    context "when the requested user exists" do
+      context "when the user doesn't have followed users" do
+        it "retrieves zero followers" do
+          user = create(:user)
+          response, code = User.get_followed_by_the_user(subject, { id: user.id, page: 1, per_page: 10 })
           expect(code).to eq(:ok)
           expect(response[:error]).to be_nil
-          expect(response[:content]).not_to be_nil
-          expect(response[:content].username).to eq(subject.username)
-          expect(response[:content].attributes["total_followed"]).to eq(@follwed_by_user.size)
-          expect(response[:content].attributes["total_followers"]).to eq(@following_the_user.size)
+          expect(response[:content].size).to eq(0)
+          expect(response[:metadata][:username]).to eq(user.username)
+        end
+      end
+
+      context "when the user have followed users" do
+        include_context "user_with_relations"
+        it "retrieves the user's followed users with pagination" do
+          response, code = User.get_followed_by_the_user(subject, { id: @user_with_relations.id, page: 1, per_page: 10 })
+          expect(code).to eq(:ok)
+          expect(response[:error]).to be_nil
+          expect(response[:content].size).to eq(@follwed_by_user.size)
+          expect(response[:content].map(&:id).sort).to eq(@follwed_by_user)
+          expect(response[:metadata][:username]).to eq(@user_with_relations.username)
         end
       end
     end
-
-    describe "::get_followed_by_the_user" do
-      context "when the requested user doesn't exist" do
-        it "doesn't retrieve the followed users" do
-          response, code = User.get_followed_by_the_user(subject, { id: 0, page: 1, per_page: 10 })
-          expect(code).to eq(:unprocessable_entity)
-          expect(response[:error]).not_to be_nil
-          expect(response[:content]).to be_nil
-        end
-      end
-
-      context "when the requested user exists" do
-        context "when the user doesn't have followed users" do
-          it "retrieves zero followers" do
-            user = create(:user)
-            response, code = User.get_followed_by_the_user(subject, { id: user.id, page: 1, per_page: 10 })
-            expect(code).to eq(:ok)
-            expect(response[:error]).to be_nil
-            expect(response[:content].size).to eq(0)
-            expect(response[:metadata][:username]).to eq(user.username)
-          end
-        end
-
-        context "when the user have followed users" do
-          it "retrieves the user's followed users with pagination" do
-            response, code = User.get_followed_by_the_user(subject, { id: subject.id, page: 1, per_page: 10 })
-            expect(code).to eq(:ok)
-            expect(response[:error]).to be_nil
-            expect(response[:content].size).to eq(@follwed_by_user.size)
-            expect(response[:content].map(&:id).sort).to eq(@follwed_by_user)
-            expect(response[:metadata][:username]).to eq(subject.username)
-          end
-        end
-      end
-    end
-
   end
 
 end
