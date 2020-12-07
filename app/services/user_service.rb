@@ -41,7 +41,7 @@ class UserService < BaseService
       requested_user = User.select("users.*, "\
                                    "(SELECT COUNT(id) FROM follows F WHERE F.user_id = #{cleaned_id}) AS total_followed, "\
                                    "(SELECT COUNT(id) FROM follows F WHERE F.followed_id = #{cleaned_id}) AS total_followers, "\
-                                   "(users.id = #{user.id} OR (users.id IN (SELECT U.followed_id from follows U where U.user_id = #{@current_user.id}))) AS followed")
+                                   "(users.id = #{@current_user.id} OR (users.id IN (SELECT U.followed_id from follows U where U.user_id = #{@current_user.id}))) AS followed")
                             .find(cleaned_id)
       { content: requested_user }
     end
