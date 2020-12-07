@@ -3,26 +3,6 @@ require 'rails_helper'
 RSpec.describe User, type: :model do
   subject { create(:user) }
 
-  let(:signup_params) { 
-    {
-      first_name: Faker::Name.first_name,
-      last_name:  Faker::Name.last_name,
-      username:   Faker::Internet.username,
-      email:      Faker::Internet.safe_email,
-      password:   Faker::Internet.password 
-    }
-  }
-
-  let(:wrong_signup_params) {
-    {
-      first_name: "",
-      last_name:  "",
-      username:   "",
-      email:      "",
-      password:   "" 
-    }
-  }
-
   describe "ActiveModel Validations" do
     it { is_expected.to validate_presence_of(:first_name) }
     it { is_expected.to validate_presence_of(:last_name) }
@@ -45,6 +25,25 @@ RSpec.describe User, type: :model do
   end
 
   describe '::signup' do
+    let(:signup_params) { 
+      {
+        first_name: Faker::Name.first_name,
+        last_name:  Faker::Name.last_name,
+        username:   Faker::Internet.username,
+        email:      Faker::Internet.safe_email,
+        password:   Faker::Internet.password 
+      }
+    }
+    let(:wrong_signup_params) {
+      {
+        first_name: "",
+        last_name:  "",
+        username:   "",
+        email:      "",
+        password:   "" 
+      }
+    }
+
     context "when some parameters are not valid" do
       it "doesn't sign up" do
         response, code = User.signup(wrong_signup_params)
