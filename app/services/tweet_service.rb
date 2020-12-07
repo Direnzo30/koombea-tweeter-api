@@ -13,7 +13,7 @@ class TweetService < BaseService
       tweets = tweets.select("tweets.*, U.username, U.first_name, U.last_name")
                      .order("tweets.created_at DESC")
                      .paginate(metadata)
-      { content: tweets, metadata: metadata }=
+      { content: tweets, metadata: metadata }
     end
   end
 
