@@ -174,7 +174,40 @@ RSpec.describe User, type: :model do
       end
     end
 
-    
+    describe "::get_followed_by_the_user" do
+      context "when the requested user doesn't exist" do
+        it "doesn't retrieve the followed users" do
+          response, code = User.get_followed_by_the_user(subject, { id: 0, page: 1, per_page: 10 })
+          expect(code).to eq(:unprocessable_entity)
+          expect(response[:error]).not_to be_nil
+          expect(response[:content]).to be_nil
+        end
+      end
+
+      context "when the requested user exists" do
+        context "when the user doesn't have followed users" do
+          it "retrieves zero followers" do
+            user = create(:user)
+            response, code = User.get_followed_by_the_user(subject, { id: user.id, page: 1, per_page: 10 })
+            expect(code).to eq(:ok)
+            expect(response[:error]).to be_nil
+            expect(response[:content].size).to eq(0)
+            expect(response[:metadata][:username]).to eq(user.username)
+          end
+        end
+
+        context "when the user have followed users" do
+          it "retrieves the user's followed users with pagination" do
+            response, code = User.get_followed_by_the_user(subject, { id: subject.id, page: 1, per_page: 10 })
+            expect(code).to eq(:ok)
+            expect(response[:error]).to be_nil
+            expect(response[:content].size).to eq(@follwed_by_user.size)
+            expect(response[:content].map(&:id).sort).to eq(@follwed_by_user)
+            expect(response[:metadata][:username]).to eq(subject.username)
+          end
+        end
+      end
+    end
 
   end
 
