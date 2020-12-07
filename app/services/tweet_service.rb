@@ -35,7 +35,7 @@ class TweetService < BaseService
   def generate_tweet(params)
     flat_endpoint do
       tweet_params = { user_id: @current_user.id }.merge(params)
-      tweet = self.new(tweet_params)
+      tweet = Tweet.new(tweet_params)
       raise ActiveRecord::RecordInvalid.new(tweet) unless tweet.valid?
       tweet.save!
       { content: { tweet_id: tweet.id } }
