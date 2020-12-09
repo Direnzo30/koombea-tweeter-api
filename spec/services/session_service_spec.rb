@@ -1,7 +1,9 @@
 require 'rails_helper'
+require_relative '../shared_contexts/init_service.rb'
+
 RSpec.describe SessionService do
 
-  subject { described_class.new(create(:user)) }
+  include_context "init_service"
   
   describe '::signup' do
     let(:fn) { subject.method(:signup) }
@@ -25,40 +27,44 @@ RSpec.describe SessionService do
     }
 
     context "when some parameters are not valid" do
+      let(:parameters) { wrong_signup_params }
       it "doesn't sign up" do
-        response, code = fn.call(wrong_signup_params)
-        expect(code).to eq(:unprocessable_entity)
-        expect(response[:content]).to be_nil
-        expect(response[:error]).not_to be_nil
+        expect(@code).to eq(:unprocessable_entity)
+        expect(@response[:content]).to be_nil
+        expect(@response[:error]).not_to be_nil
       end
     end
 
     context "when all parameters are valid" do
+      let(:parameters) { signup_params }
       it "signs up" do
-        response, code = fn.call(signup_params)
-        expect(code).to eq(:ok)
-        expect(response[:error]).to be_nil
-        expect(response[:content][:user_id]).not_to be_nil
+        expect(@code).to eq(:ok)
+        expect(@response[:error]).to be_nil
+        expect(@response[:content][:user_id]).not_to be_nil
       end
     end
 
     context "when email already exists" do
-      it "doesn't sign up" do
+      let(:parameters) do 
         signup_params[:email] = subject.current_user.email
-        response, code = fn.call(signup_params)
-        expect(code).to eq(:unprocessable_entity)
-        expect(response[:content]).to be_nil
-        expect(response[:error]).not_to be_nil
+        signup_params
+      end
+      it "doesn't sign up" do
+        expect(@code).to eq(:unprocessable_entity)
+        expect(@response[:content]).to be_nil
+        expect(@response[:error]).not_to be_nil
       end
     end
 
     context "when username already exists" do
-      it "doesn't sign up" do
+      let(:parameters) do 
         signup_params[:username] = subject.current_user.username
-        response, code = fn.call(signup_params)
-        expect(code).to eq(:unprocessable_entity)
-        expect(response[:content]).to be_nil
-        expect(response[:error]).not_to be_nil
+        signup_params
+      end
+      it "doesn't sign up" do
+        expect(@code).to eq(:unprocessable_entity)
+        expect(@response[:content]).to be_nil
+        expect(@response[:error]).not_to be_nil
       end
     end
 
@@ -70,6 +76,7 @@ RSpec.describe SessionService do
     let(:random_username) { Faker::Internet.username }
 
     context "when signin parameters are missing" do
+      let(:call_function_hook) { false }
       it "doesn't sign in" do
         response, code = fn.call({ username: nil, password: random_password })
         expect(code).to eq(:bad_request)
@@ -83,33 +90,35 @@ RSpec.describe SessionService do
     end
 
     context "When credentials are not valid" do
+      let(:parameters) { { username: random_username, password: random_password } }
       it "doesn't sign in" do
-        response, code = fn.call({ username: random_username, password: random_password })
-        expect(code).to eq(:bad_request)
-        expect(response[:error]).to eq("Credentials are not valid")
-        expect(response[:content]).to be_nil
+        expect(@code).to eq(:bad_request)
+        expect(@response[:error]).to eq("Credentials are not valid")
+        expect(@response[:content]).to be_nil
       end
     end
 
     context "When credentials are valid" do
+      let(:parameters) { { username: subject.current_user.username, password: subject.current_user.password } }
       it "signs in" do
-        response, code = fn.call({ username: subject.current_user.username, password: subject.current_user.password })
-        expect(code).to eq(:ok)
-        expect(response[:error]).to be_nil
-        expect(response[:content].authorization_token).not_to be_nil
+        expect(@code).to eq(:ok)
+        expect(@response[:error]).to be_nil
+        expect(@response[:content].authorization_token).not_to be_nil
       end
     end
   end
 
   describe "::signout" do
     let(:fn) { subject.method(:signout) }
-    it "signs out" do
+    let(:dummy) do
       subject.current_user.authorization_token = Faker::Internet.uuid
       subject.current_user.token_lifetime = Time.now
-      response, code = fn.call()
-      expect(code).to eq(:ok)
-      expect(response[:error]).to be_nil
-      expect(response[:content][:success]).to eq(true)
+      nil
+    end
+    it "signs out" do
+      expect(@code).to eq(:ok)
+      expect(@response[:error]).to be_nil
+      expect(@response[:content][:success]).to eq(true)
       expect(subject.current_user.authorization_token).to eq(nil)
       expect(subject.current_user.token_lifetime).to eq(nil)
     end

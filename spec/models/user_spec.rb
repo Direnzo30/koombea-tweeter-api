@@ -20,7 +20,7 @@
 #  index_users_on_username             (username) UNIQUE
 #
 require 'rails_helper'
-require_relative '../shared_contexts/user_with_relations.rb'
+
 RSpec.describe User, type: :model do
   subject { create(:user) }
 
