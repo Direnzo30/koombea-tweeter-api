@@ -42,7 +42,7 @@ RSpec.describe UserService do
 
         it_behaves_like "a valid response"
 
-        it "retrieves zero followers" do
+        it "retrieves zero followed users" do
           response = result.first
           expect(response[:content].size).to eq(0)
           expect(response[:metadata][:username]).to eq(user.username)
@@ -64,4 +64,44 @@ RSpec.describe UserService do
       end
     end
   end
+
+  describe "::following_the_user" do
+    let(:result) { subject.following_the_user(*parameters) }
+
+    context "when the requested user doesn't exist" do
+      let(:parameters) { [{ id: 0, page: 1, per_page: 10 }] }
+      it_behaves_like "an unprocessable response"
+    end
+
+    context "when the requested user exists" do
+      context "when the user doesn't have followers" do
+        let(:user) { create(:user) }
+        let(:parameters) { [id: user.id, page: 1, per_page: 10] }
+
+        it_behaves_like "a valid response"
+
+        it "retrieves zero followers" do
+          response = result.first
+          expect(response[:content].size).to eq(0)
+          expect(response[:metadata][:username]).to eq(user.username)
+        end
+      end
+
+      context "when the user have followers" do
+        include_context "user_with_relations"
+        let(:parameters) { [id: @user_with_relations.id, page: 1, per_page: 10] }
+
+        it_behaves_like "a valid response"
+
+        it "retrieves the user's followers with pagination" do
+          response = result.first
+          expect(response[:content].size).to eq(@following_the_user.size)
+          expect(response[:content].map(&:id).sort).to eq(@following_the_user)
+          expect(response[:metadata][:username]).to eq(@user_with_relations.username)
+        end
+      end
+    end
+
+  end
+
 end
